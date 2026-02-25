@@ -67,3 +67,94 @@ export interface FilterState {
   orderStatus: OrderStatus | "all";
   disputeStatus: DisputeStatus | "all";
 }
+
+// ─── Brand Level Types ────────────────────────────────────────────────────────
+
+export interface BrandHealthDimension {
+  label: string;
+  score: number;        // 0–100
+  trend: "up" | "down" | "neutral";
+  delta: number;        // vs prior period
+  description: string;
+}
+
+export interface BrandHealthMetrics {
+  overall: number;
+  marketPositioning: BrandHealthDimension;
+  customerSentiment: BrandHealthDimension;
+  brandMessaging: BrandHealthDimension;
+  visualIdentity: BrandHealthDimension;
+  operationalPerformance: BrandHealthDimension;
+}
+
+export interface RadarDataPoint {
+  dimension: string;
+  ourBrand: number;
+  topCompetitor: number;
+  industryAvg: number;
+}
+
+export interface SentimentDataPoint {
+  month: string;
+  positive: number;
+  neutral: number;
+  negative: number;
+}
+
+export interface CompetitorData {
+  name: string;
+  color: string;
+  marketShare: number;
+  satisfactionScore: number;
+  avgDeliveryMinutes: number;
+  issueRate: number;
+  disputeRate: number;
+}
+
+export type TrendImpact = "high" | "medium" | "low";
+export type TrendDirection = "opportunity" | "threat" | "neutral";
+
+export interface MarketTrend {
+  id: string;
+  title: string;
+  description: string;
+  impact: TrendImpact;
+  direction: TrendDirection;
+  relevanceScore: number; // 1–10
+  source: string;
+}
+
+export type RecommendationPriority = "critical" | "high" | "medium";
+export type EffortLevel = "low" | "medium" | "high";
+
+export interface StrategicRecommendation {
+  id: string;
+  priority: RecommendationPriority;
+  category: string;
+  title: string;
+  description: string;
+  expectedImpact: string;
+  effort: EffortLevel;
+  successMetrics: string[];
+}
+
+export interface StoreRanking {
+  storeNumber: string;
+  storeName: string;
+  brandScore: number;
+  orders: number;
+  completionRate: number;
+  issueRate: number;
+  disputeRate: number;
+  trend: "up" | "down" | "neutral";
+}
+
+export interface BrandMetrics {
+  health: BrandHealthMetrics;
+  radarData: RadarDataPoint[];
+  sentimentOverTime: SentimentDataPoint[];
+  competitors: CompetitorData[];
+  marketTrends: MarketTrend[];
+  recommendations: StrategicRecommendation[];
+  storeRankings: StoreRanking[];
+}
