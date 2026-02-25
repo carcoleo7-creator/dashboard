@@ -1,5 +1,5 @@
-import { subDays, addMinutes, subMinutes, format } from "date-fns";
-import { Order, Driver, OrderItem, OrderStatus, DisputeStatus } from "./types";
+import { subDays, addMinutes, format } from "date-fns";
+import { Order, Driver, OrderItem, OrderIssue, OrderIssueType, OrderStatus, DisputeStatus } from "./types";
 
 const STORES = [
   { number: "STR-001", name: "Downtown Kitchen" },
@@ -44,6 +44,59 @@ const DISPUTE_REASONS = [
   "Order never arrived",
   "Food quality below standard",
   "Incorrect pricing charged",
+];
+
+const ISSUE_POOL: { type: OrderIssueType; label: string; descriptions: string[] }[] = [
+  {
+    type: "missing_items",
+    label: "Missing Items",
+    descriptions: [
+      "Side of fries not included",
+      "Drink missing from bag",
+      "Napkins and utensils not provided",
+      "Sauce packet not included",
+    ],
+  },
+  {
+    type: "missing_food",
+    label: "Missing Food",
+    descriptions: [
+      "Entire entrée not in the bag",
+      "One of two burgers missing",
+      "Dessert item not included",
+      "Appetizer not delivered",
+    ],
+  },
+  {
+    type: "food_not_ready",
+    label: "Food Not Ready",
+    descriptions: [
+      "Driver waited 20+ min at restaurant",
+      "Order wasn't started when driver arrived",
+      "Restaurant claimed order was cancelled",
+      "Long prep delay caused cold food",
+    ],
+  },
+  {
+    type: "wrong_items",
+    label: "Wrong Items",
+    descriptions: [
+      "Received another customer's order",
+      "Wrong burger variation delivered",
+      "Incorrect drink flavour",
+      "Substitution made without notice",
+    ],
+  },
+  {
+    type: "cold_food",
+    label: "Cold Food",
+    descriptions: [
+      "Food arrived cold and inedible",
+      "Pizza was completely cold on arrival",
+      "Soup arrived lukewarm",
+      "Fries were cold and soggy",
+    ],
+  },
 ];
 
 const CUSTOMER_FEEDBACK = [
@@ -143,6 +196,25 @@ function generateOrders(): Order[] {
       if (disputeStatus !== "none") customerRating = Math.floor(rng() * 2) + 1; // 1 or 2 if disputed
     }
 
+    // Order issues: ~25% of delivered/canceled orders have 1-2 issues
+    const issues: OrderIssue[] = [];
+    const issueRoll = rng();
+    if ((trackingStatus === "delivered" || trackingStatus === "canceled") && issueRoll < 0.25) {
+      const issueCount = rng() < 0.75 ? 1 : 2;
+      const usedTypes = new Set<OrderIssueType>();
+      for (let j = 0; j < issueCount; j++) {
+        const pool = ISSUE_POOL.filter((ip) => !usedTypes.has(ip.type));
+        if (pool.length === 0) break;
+        const issueTemplate = pick(pool, rng);
+        usedTypes.add(issueTemplate.type);
+        issues.push({
+          type: issueTemplate.type,
+          label: issueTemplate.label,
+          description: pick(issueTemplate.descriptions, rng),
+        });
+      }
+    }
+
     const items = generateItems(rng);
     const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -163,6 +235,7 @@ function generateOrders(): Order[] {
       totalAmount: Math.round(totalAmount * 100) / 100,
       deliveryTimeMinutes: deliveryTimeMinutes ? Math.round(deliveryTimeMinutes) : null,
       items,
+      issues,
     });
   }
 
@@ -193,23 +266,30 @@ export function computeOrdersOverTime(
     .slice(-30);
 }
 
-export function computeDeliveryByStore(
+const ISSUE_META: Record<OrderIssueType, { label: string; color: string }> = {
+  missing_items: { label: "Missing Items", color: "#f97316" },
+  missing_food:  { label: "Missing Food",  color: "#ef4444" },
+  food_not_ready: { label: "Food Not Ready", color: "#8b5cf6" },
+  wrong_items:   { label: "Wrong Items",   color: "#3b82f6" },
+  cold_food:     { label: "Cold Food",     color: "#06b6d4" },
+};
+
+export function computeIssuesByType(
   orders: Order[]
-): { store: string; storeNumber: string; avgMinutes: number }[] {
-  const storeMap = new Map<string, { total: number; count: number; name: string }>();
+): { type: OrderIssueType; label: string; count: number; color: string }[] {
+  const counts = new Map<OrderIssueType, number>();
   orders.forEach((o) => {
-    if (o.deliveryTimeMinutes !== null) {
-      if (!storeMap.has(o.storeNumber)) {
-        storeMap.set(o.storeNumber, { total: 0, count: 0, name: o.storeName });
-      }
-      const entry = storeMap.get(o.storeNumber)!;
-      entry.total += o.deliveryTimeMinutes;
-      entry.count++;
-    }
+    o.issues.forEach((issue) => {
+      counts.set(issue.type, (counts.get(issue.type) ?? 0) + 1);
+    });
   });
-  return Array.from(storeMap.entries()).map(([num, v]) => ({
-    store: num,
-    storeNumber: num,
-    avgMinutes: v.count > 0 ? Math.round(v.total / v.count) : 0,
-  }));
+  return (Object.keys(ISSUE_META) as OrderIssueType[])
+    .map((type) => ({
+      type,
+      label: ISSUE_META[type].label,
+      count: counts.get(type) ?? 0,
+      color: ISSUE_META[type].color,
+    }))
+    .filter((d) => d.count > 0)
+    .sort((a, b) => b.count - a.count);
 }

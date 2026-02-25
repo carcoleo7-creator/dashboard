@@ -9,22 +9,24 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
-  Star,
+  TriangleAlert,
 } from "lucide-react";
 import { cn, formatCurrency, formatDuration } from "@/lib/utils";
 import { Order } from "@/lib/types";
 import { OrderStatusBadge, DisputeStatusBadge } from "./StatusBadge";
 
-type SortKey = keyof Pick<
-  Order,
-  | "id"
-  | "storeNumber"
-  | "trackingStatus"
-  | "orderDate"
-  | "deliveryTimeMinutes"
-  | "disputeStatus"
-  | "totalAmount"
->;
+type SortKey =
+  | keyof Pick<
+      Order,
+      | "id"
+      | "storeNumber"
+      | "trackingStatus"
+      | "orderDate"
+      | "deliveryTimeMinutes"
+      | "disputeStatus"
+      | "totalAmount"
+    >
+  | "issueCount";
 
 const PAGE_SIZE = 20;
 
@@ -68,8 +70,15 @@ export function OrdersTable({ orders, onSelectOrder }: OrdersTableProps) {
   const sorted = useMemo(() => {
     if (!sortKey) return orders;
     return [...orders].sort((a, b) => {
-      let aVal: string | number | Date | null = a[sortKey];
-      let bVal: string | number | Date | null = b[sortKey];
+      let aVal: string | number | Date | null;
+      let bVal: string | number | Date | null;
+      if (sortKey === "issueCount") {
+        aVal = a.issues.length;
+        bVal = b.issues.length;
+      } else {
+        aVal = a[sortKey];
+        bVal = b[sortKey];
+      }
       if (aVal === null) aVal = "";
       if (bVal === null) bVal = "";
       const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
@@ -141,7 +150,7 @@ export function OrdersTable({ orders, onSelectOrder }: OrdersTableProps) {
               <Th field="orderDate" label="Event Date" />
               <Th field="deliveryTimeMinutes" label="Delivery Time" />
               <Th field="disputeStatus" label="Dispute" />
-              <Th label="Rating" />
+              <Th field="issueCount" label="Issues" />
               <Th label="Actions" className="text-right" />
             </tr>
           </thead>
@@ -230,10 +239,13 @@ export function OrdersTable({ orders, onSelectOrder }: OrdersTableProps) {
                     )}
                   </td>
                   <td className="px-3 py-3">
-                    {order.customerRating ? (
-                      <span className="flex items-center gap-0.5 text-xs font-medium text-surface-700">
-                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                        {order.customerRating}
+                    {order.issues.length > 0 ? (
+                      <span
+                        title={order.issues.map((i) => i.label).join(", ")}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200"
+                      >
+                        <TriangleAlert className="w-3 h-3" />
+                        {order.issues.length}
                       </span>
                     ) : (
                       <span className="text-xs text-surface-300">—</span>

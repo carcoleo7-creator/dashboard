@@ -3,7 +3,7 @@
 import { AggregateMetrics } from "@/lib/types";
 import { OrdersLineChart } from "./OrdersLineChart";
 import { DisputesPieChart } from "./DisputesPieChart";
-import { DeliveryBarChart } from "./DeliveryBarChart";
+import { IssuesBarChart } from "./IssuesBarChart";
 
 interface ChartsSectionProps {
   metrics: AggregateMetrics;
@@ -23,12 +23,9 @@ export function ChartsSection({ metrics }: ChartsSectionProps) {
           totalDisputes={metrics.totalDisputes}
         />
       </div>
-      {/* Delivery by store - full width */}
+      {/* Issues by type - full width */}
       <div className="lg:col-span-3">
-        <DeliveryBarChart
-          data={metrics.deliveryByStore}
-          avgDelivery={metrics.avgDeliveryTimeMinutes}
-        />
+        <IssuesBarChart data={metrics.issuesByType} />
       </div>
     </div>
   );

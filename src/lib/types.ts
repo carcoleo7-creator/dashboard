@@ -1,5 +1,17 @@
 export type OrderStatus = "delivered" | "in_transit" | "canceled" | "pending";
 export type DisputeStatus = "approved" | "denied" | "pending" | "none";
+export type OrderIssueType =
+  | "missing_items"
+  | "missing_food"
+  | "food_not_ready"
+  | "wrong_items"
+  | "cold_food";
+
+export interface OrderIssue {
+  type: OrderIssueType;
+  label: string;
+  description: string;
+}
 
 export interface Driver {
   id: string;
@@ -31,6 +43,7 @@ export interface Order {
   totalAmount: number;
   deliveryTimeMinutes: number | null;
   items: OrderItem[];
+  issues: OrderIssue[];
 }
 
 export interface AggregateMetrics {
@@ -43,7 +56,7 @@ export interface AggregateMetrics {
   avgDeliveryTimeMinutes: number;
   orderCompletionRate: number;
   ordersOverTime: { date: string; orders: number; disputes: number }[];
-  deliveryByStore: { store: string; avgMinutes: number; storeNumber: string }[];
+  issuesByType: { type: OrderIssueType; label: string; count: number; color: string }[];
   disputeBreakdown: { name: string; value: number; color: string }[];
 }
 

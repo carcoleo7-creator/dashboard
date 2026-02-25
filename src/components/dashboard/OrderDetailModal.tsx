@@ -6,16 +6,15 @@ import {
   X,
   Store,
   User,
-  Calendar,
   Clock,
   Star,
   AlertTriangle,
   MessageSquare,
   Package,
-  DollarSign,
   CheckCircle,
   Truck,
   XCircle,
+  TriangleAlert,
 } from "lucide-react";
 import { Order } from "@/lib/types";
 import { cn, formatCurrency, formatDuration } from "@/lib/utils";
@@ -307,6 +306,37 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
               </div>
             </div>
           </div>
+
+          {/* Order Issues */}
+          {order.issues.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center">
+                  <TriangleAlert className="w-3.5 h-3.5 text-red-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-surface-800">
+                  Order Issues
+                </h3>
+                <span className="ml-auto text-xs font-semibold bg-red-50 text-red-700 border border-red-200 rounded-full px-2 py-0.5">
+                  {order.issues.length} {order.issues.length === 1 ? "issue" : "issues"}
+                </span>
+              </div>
+              <div className="bg-red-50 rounded-lg overflow-hidden border border-red-100">
+                {order.issues.map((issue, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "px-3 py-2.5",
+                      i < order.issues.length - 1 && "border-b border-red-100"
+                    )}
+                  >
+                    <p className="text-xs font-semibold text-red-800">{issue.label}</p>
+                    <p className="text-xs text-red-600 mt-0.5">{issue.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Dispute Info */}
           {order.disputeStatus !== "none" && (

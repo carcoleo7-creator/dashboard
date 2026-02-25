@@ -13,7 +13,7 @@ import {
 import {
   MOCK_ORDERS,
   computeOrdersOverTime,
-  computeDeliveryByStore,
+  computeIssuesByType,
 } from "@/lib/mock-data";
 
 const DEFAULT_FILTERS: FilterState = {
@@ -78,7 +78,7 @@ export function useDashboardFilters() {
       totalOrders > 0 ? (completedOrders.length / totalOrders) * 100 : 0;
 
     const ordersOverTime = computeOrdersOverTime(filteredOrders);
-    const deliveryByStore = computeDeliveryByStore(filteredOrders);
+    const issuesByType = computeIssuesByType(filteredOrders);
 
     const disputeBreakdown = [
       { name: "Approved", value: approvedDisputes, color: "#22c55e" },
@@ -96,7 +96,7 @@ export function useDashboardFilters() {
       avgDeliveryTimeMinutes,
       orderCompletionRate,
       ordersOverTime,
-      deliveryByStore,
+      issuesByType,
       disputeBreakdown,
     };
   }, [filteredOrders]);
