@@ -5,12 +5,10 @@ import {
   AlertTriangle,
   CheckCircle,
   DollarSign,
-  Clock,
-  TrendingUp,
 } from "lucide-react";
 import { KPICard } from "./KPICard";
 import { AggregateMetrics } from "@/lib/types";
-import { formatCurrency, formatDuration, formatPercent } from "@/lib/utils";
+import { formatCurrency, formatPercent } from "@/lib/utils";
 
 interface KPIRowProps {
   metrics: AggregateMetrics;
@@ -38,7 +36,7 @@ export function KPIRow({
       : "0%";
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <KPICard
         label="Total Orders"
         value={metrics.totalOrders.toLocaleString()}
@@ -82,32 +80,6 @@ export function KPIRow({
         subValue="per approved dispute"
         icon={<DollarSign className="w-5 h-5 text-purple-600" />}
         iconBg="bg-purple-50"
-      />
-      <KPICard
-        label="Avg Delivery Time"
-        value={
-          metrics.avgDeliveryTimeMinutes > 0
-            ? formatDuration(metrics.avgDeliveryTimeMinutes)
-            : "—"
-        }
-        subValue={`${formatPercent(metrics.trackingCoverage)} tracking coverage`}
-        icon={<Clock className="w-5 h-5 text-blue-600" />}
-        iconBg="bg-blue-50"
-        trend={
-          metrics.avgDeliveryTimeMinutes < 35
-            ? "up"
-            : metrics.avgDeliveryTimeMinutes > 50
-            ? "down"
-            : "neutral"
-        }
-        trendLabel={
-          metrics.avgDeliveryTimeMinutes < 35
-            ? "Excellent timing"
-            : metrics.avgDeliveryTimeMinutes > 50
-            ? "Above target"
-            : "On target"
-        }
-        trendPositive={true}
       />
     </div>
   );
