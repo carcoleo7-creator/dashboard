@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { subDays } from "date-fns";
-import { isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
+import { subDays, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import {
   Order,
   FilterState,
   AggregateMetrics,
-  OrderStatus,
   DisputeStatus,
+  DeliveryTrackingStatus,
 } from "@/lib/types";
 import {
   MOCK_ORDERS,
@@ -16,11 +15,14 @@ import {
   computeIssuesByType,
 } from "@/lib/mock-data";
 
+// Dashboard only surfaces completed (delivered) orders
+const COMPLETED_ORDERS = MOCK_ORDERS.filter((o) => o.trackingStatus === "delivered");
+
 const DEFAULT_FILTERS: FilterState = {
   dateFrom: subDays(new Date(), 30),
   dateTo: new Date(),
   storeNumber: "all",
-  orderStatus: "all",
+  deliveryTracking: "all",
   disputeStatus: "all",
 };
 
@@ -29,20 +31,16 @@ export function useDashboardFilters() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const filteredOrders = useMemo(() => {
-    return MOCK_ORDERS.filter((order) => {
-      // Date range
+    return COMPLETED_ORDERS.filter((order) => {
       if (isBefore(order.orderDate, startOfDay(filters.dateFrom))) return false;
       if (isAfter(order.orderDate, endOfDay(filters.dateTo))) return false;
 
-      // Store
       if (filters.storeNumber !== "all" && order.storeNumber !== filters.storeNumber)
         return false;
 
-      // Order status
-      if (filters.orderStatus !== "all" && order.trackingStatus !== filters.orderStatus)
+      if (filters.deliveryTracking !== "all" && order.deliveryTracking !== filters.deliveryTracking)
         return false;
 
-      // Dispute status
       if (filters.disputeStatus !== "all" && order.disputeStatus !== filters.disputeStatus)
         return false;
 
@@ -53,8 +51,7 @@ export function useDashboardFilters() {
   const metrics = useMemo((): AggregateMetrics => {
     const totalOrders = filteredOrders.length;
 
-    const disputedOrders = filteredOrders.filter((o) => o.disputeStatus !== "none");
-    const totalDisputes = disputedOrders.length;
+    const totalDisputes = filteredOrders.filter((o) => o.disputeStatus !== "none").length;
     const approvedDisputes = filteredOrders.filter((o) => o.disputeStatus === "approved").length;
     const deniedDisputes = filteredOrders.filter((o) => o.disputeStatus === "denied").length;
     const pendingDisputes = filteredOrders.filter((o) => o.disputeStatus === "pending").length;
@@ -66,16 +63,15 @@ export function useDashboardFilters() {
           compensationOrders.length
         : 0;
 
-    const deliveredOrders = filteredOrders.filter((o) => o.deliveryTimeMinutes !== null);
     const avgDeliveryTimeMinutes =
-      deliveredOrders.length > 0
-        ? deliveredOrders.reduce((sum, o) => sum + (o.deliveryTimeMinutes ?? 0), 0) /
-          deliveredOrders.length
+      totalOrders > 0
+        ? filteredOrders.reduce((sum, o) => sum + (o.deliveryTimeMinutes ?? 0), 0) / totalOrders
         : 0;
 
-    const completedOrders = filteredOrders.filter((o) => o.trackingStatus === "delivered");
-    const orderCompletionRate =
-      totalOrders > 0 ? (completedOrders.length / totalOrders) * 100 : 0;
+    const trackedCount = filteredOrders.filter((o) => o.deliveryTracking === "tracked").length;
+    const partialCount = filteredOrders.filter((o) => o.deliveryTracking === "partially_tracked").length;
+    const untrackedCount = filteredOrders.filter((o) => o.deliveryTracking === "untracked").length;
+    const trackingCoverage = totalOrders > 0 ? (trackedCount / totalOrders) * 100 : 0;
 
     const ordersOverTime = computeOrdersOverTime(filteredOrders);
     const issuesByType = computeIssuesByType(filteredOrders);
@@ -86,6 +82,12 @@ export function useDashboardFilters() {
       { name: "Pending", value: pendingDisputes, color: "#f59e0b" },
     ].filter((d) => d.value > 0);
 
+    const trackingBreakdown = [
+      { name: "Tracked", value: trackedCount, color: "#22c55e" },
+      { name: "Partially Tracked", value: partialCount, color: "#f59e0b" },
+      { name: "Untracked", value: untrackedCount, color: "#ef4444" },
+    ].filter((d) => d.value > 0);
+
     return {
       totalOrders,
       totalDisputes,
@@ -94,10 +96,11 @@ export function useDashboardFilters() {
       pendingDisputes,
       avgCompensationCost,
       avgDeliveryTimeMinutes,
-      orderCompletionRate,
+      trackingCoverage,
       ordersOverTime,
       issuesByType,
       disputeBreakdown,
+      trackingBreakdown,
     };
   }, [filteredOrders]);
 
@@ -113,8 +116,8 @@ export function useDashboardFilters() {
     setFilters((prev) => ({ ...prev, disputeStatus: status }));
   }
 
-  function drillIntoOrderStatus(status: OrderStatus | "all") {
-    setFilters((prev) => ({ ...prev, orderStatus: status }));
+  function drillIntoTrackingStatus(status: DeliveryTrackingStatus | "all") {
+    setFilters((prev) => ({ ...prev, deliveryTracking: status }));
   }
 
   return {
@@ -122,10 +125,11 @@ export function useDashboardFilters() {
     updateFilter,
     resetFilters,
     filteredOrders,
+    totalCompleted: COMPLETED_ORDERS.length,
     metrics,
     selectedOrder,
     setSelectedOrder,
     drillIntoDisputeStatus,
-    drillIntoOrderStatus,
+    drillIntoTrackingStatus,
   };
 }

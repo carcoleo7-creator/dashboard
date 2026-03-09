@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { OrderStatus, DisputeStatus } from "@/lib/types";
+import { OrderStatus, DisputeStatus, DeliveryTrackingStatus } from "@/lib/types";
 
 const ORDER_STATUS_CONFIG: Record<
   OrderStatus,
@@ -84,6 +84,45 @@ export function DisputeStatusBadge({ status, className }: DisputeStatusBadgeProp
         className
       )}
     >
+      {config.label}
+    </span>
+  );
+}
+
+const DELIVERY_TRACKING_CONFIG: Record<
+  DeliveryTrackingStatus,
+  { label: string; classes: string }
+> = {
+  tracked: {
+    label: "Tracked",
+    classes: "bg-green-50 text-green-700 border border-green-200",
+  },
+  partially_tracked: {
+    label: "Partially Tracked",
+    classes: "bg-amber-50 text-amber-700 border border-amber-200",
+  },
+  untracked: {
+    label: "Untracked",
+    classes: "bg-red-50 text-red-700 border border-red-200",
+  },
+};
+
+interface DeliveryTrackingBadgeProps {
+  status: DeliveryTrackingStatus;
+  className?: string;
+}
+
+export function DeliveryTrackingBadge({ status, className }: DeliveryTrackingBadgeProps) {
+  const config = DELIVERY_TRACKING_CONFIG[status];
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+        config.classes,
+        className
+      )}
+    >
+      <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current opacity-70" />
       {config.label}
     </span>
   );

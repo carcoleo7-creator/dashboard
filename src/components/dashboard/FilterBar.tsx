@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { format } from "date-fns";
 import { Calendar, ChevronDown, X, SlidersHorizontal, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FilterState, OrderStatus, DisputeStatus } from "@/lib/types";
+import { FilterState, DisputeStatus, DeliveryTrackingStatus } from "@/lib/types";
 import { STORE_OPTIONS } from "@/lib/mock-data";
 
 interface FilterBarProps {
@@ -15,12 +14,11 @@ interface FilterBarProps {
   totalAll: number;
 }
 
-const ORDER_STATUS_OPTIONS: { value: OrderStatus | "all"; label: string }[] = [
-  { value: "all", label: "All Statuses" },
-  { value: "delivered", label: "Delivered" },
-  { value: "in_transit", label: "In Transit" },
-  { value: "canceled", label: "Canceled" },
-  { value: "pending", label: "Pending" },
+const TRACKING_STATUS_OPTIONS: { value: DeliveryTrackingStatus | "all"; label: string }[] = [
+  { value: "all", label: "All Tracking" },
+  { value: "tracked", label: "Tracked" },
+  { value: "partially_tracked", label: "Partially Tracked" },
+  { value: "untracked", label: "Untracked" },
 ];
 
 const DISPUTE_STATUS_OPTIONS: { value: DisputeStatus | "all"; label: string }[] = [
@@ -101,10 +99,9 @@ export function FilterBar({
   totalFiltered,
   totalAll,
 }: FilterBarProps) {
-  const [showPresets, setShowPresets] = useState(false);
   const isFiltered =
     filters.storeNumber !== "all" ||
-    filters.orderStatus !== "all" ||
+    filters.deliveryTracking !== "all" ||
     filters.disputeStatus !== "all";
 
   function applyPreset(days: number) {
@@ -120,12 +117,15 @@ export function FilterBar({
       <div className="flex items-center gap-2 mb-3">
         <SlidersHorizontal className="w-4 h-4 text-surface-500" />
         <span className="text-sm font-semibold text-surface-700">Filters</span>
+        <span className="ml-1 text-xs text-surface-400 bg-green-50 border border-green-200 text-green-700 px-2 py-0.5 rounded-full font-medium">
+          Completed orders only
+        </span>
         <span className="ml-auto text-xs text-surface-500">
           Showing{" "}
           <span className="font-semibold text-surface-900">
             {totalFiltered.toLocaleString()}
           </span>{" "}
-          of {totalAll.toLocaleString()} orders
+          of {totalAll.toLocaleString()} completed orders
         </span>
         {isFiltered && (
           <button
@@ -140,7 +140,6 @@ export function FilterBar({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Date range */}
         <div className="sm:col-span-2 lg:col-span-1">
           <p className="text-xs font-medium text-surface-500 mb-1">Date From</p>
           <DateInput
@@ -157,8 +156,6 @@ export function FilterBar({
             label="End date"
           />
         </div>
-
-        {/* Store */}
         <div>
           <p className="text-xs font-medium text-surface-500 mb-1">Store</p>
           <Select
@@ -167,19 +164,16 @@ export function FilterBar({
             onChange={(v) => updateFilter("storeNumber", v)}
           />
         </div>
-
-        {/* Status filters */}
         <div>
-          <p className="text-xs font-medium text-surface-500 mb-1">Order Status</p>
+          <p className="text-xs font-medium text-surface-500 mb-1">Tracking Status</p>
           <Select
-            value={filters.orderStatus}
-            options={ORDER_STATUS_OPTIONS}
-            onChange={(v) => updateFilter("orderStatus", v as OrderStatus | "all")}
+            value={filters.deliveryTracking}
+            options={TRACKING_STATUS_OPTIONS}
+            onChange={(v) => updateFilter("deliveryTracking", v as DeliveryTrackingStatus | "all")}
           />
         </div>
       </div>
 
-      {/* Second row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
         <div>
           <p className="text-xs font-medium text-surface-500 mb-1">Dispute Status</p>
@@ -189,8 +183,6 @@ export function FilterBar({
             onChange={(v) => updateFilter("disputeStatus", v as DisputeStatus | "all")}
           />
         </div>
-
-        {/* Date presets */}
         <div className="sm:col-span-1 lg:col-span-3 flex items-end gap-2">
           <div>
             <p className="text-xs font-medium text-surface-500 mb-1">Quick Ranges</p>
@@ -209,7 +201,6 @@ export function FilterBar({
         </div>
       </div>
 
-      {/* Active filters chips */}
       {isFiltered && (
         <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-surface-100">
           <span className="text-xs text-surface-500 self-center">Active:</span>
@@ -219,10 +210,10 @@ export function FilterBar({
               onRemove={() => updateFilter("storeNumber", "all")}
             />
           )}
-          {filters.orderStatus !== "all" && (
+          {filters.deliveryTracking !== "all" && (
             <FilterChip
-              label={`Status: ${filters.orderStatus.replace("_", " ")}`}
-              onRemove={() => updateFilter("orderStatus", "all")}
+              label={`Tracking: ${filters.deliveryTracking.replace("_", " ")}`}
+              onRemove={() => updateFilter("deliveryTracking", "all")}
             />
           )}
           {filters.disputeStatus !== "all" && (

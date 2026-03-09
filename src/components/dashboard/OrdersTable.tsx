@@ -13,14 +13,14 @@ import {
 } from "lucide-react";
 import { cn, formatCurrency, formatDuration } from "@/lib/utils";
 import { Order } from "@/lib/types";
-import { OrderStatusBadge, DisputeStatusBadge } from "./StatusBadge";
+import { DeliveryTrackingBadge, DisputeStatusBadge } from "./StatusBadge";
 
 type SortKey =
   | keyof Pick<
       Order,
       | "id"
       | "storeNumber"
-      | "trackingStatus"
+      | "deliveryTracking"
       | "orderDate"
       | "deliveryTimeMinutes"
       | "disputeStatus"
@@ -145,7 +145,7 @@ export function OrdersTable({ orders, onSelectOrder }: OrdersTableProps) {
             <tr className="bg-surface-50 border-b border-surface-100">
               <Th field="id" label="Order ID" />
               <Th field="storeNumber" label="Store" />
-              <Th field="trackingStatus" label="Status" />
+              <Th field="deliveryTracking" label="Tracking" />
               <Th label="Driver" />
               <Th field="orderDate" label="Event Date" />
               <Th field="deliveryTimeMinutes" label="Delivery Time" />
@@ -193,7 +193,7 @@ export function OrdersTable({ orders, onSelectOrder }: OrdersTableProps) {
                     </div>
                   </td>
                   <td className="px-3 py-3">
-                    <OrderStatusBadge status={order.trackingStatus} />
+                    <DeliveryTrackingBadge status={order.deliveryTracking} />
                   </td>
                   <td className="px-3 py-3">
                     <div>

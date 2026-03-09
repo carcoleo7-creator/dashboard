@@ -90,7 +90,7 @@ export function KPIRow({
             ? formatDuration(metrics.avgDeliveryTimeMinutes)
             : "—"
         }
-        subValue={`${formatPercent(metrics.orderCompletionRate)} completion`}
+        subValue={`${formatPercent(metrics.trackingCoverage)} tracking coverage`}
         icon={<Clock className="w-5 h-5 text-blue-600" />}
         iconBg="bg-blue-50"
         trend={

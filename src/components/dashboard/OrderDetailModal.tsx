@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Order } from "@/lib/types";
 import { cn, formatCurrency, formatDuration } from "@/lib/utils";
-import { OrderStatusBadge, DisputeStatusBadge } from "./StatusBadge";
+import { DeliveryTrackingBadge, DisputeStatusBadge } from "./StatusBadge";
 
 interface OrderDetailModalProps {
   order: Order | null;
@@ -187,7 +187,7 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
         <div className="p-5 space-y-5">
           {/* Status badges */}
           <div className="flex flex-wrap gap-2">
-            <OrderStatusBadge status={order.trackingStatus} />
+            <DeliveryTrackingBadge status={order.deliveryTracking} />
             {order.disputeStatus !== "none" && (
               <DisputeStatusBadge status={order.disputeStatus} />
             )}
@@ -245,6 +245,12 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
               label="Est. Delivery"
               value={format(order.estimatedDeliveryTime, "h:mm a")}
             />
+            {order.pickupTime && (
+              <Row
+                label="Pickup Time"
+                value={format(order.pickupTime, "h:mm a")}
+              />
+            )}
             {order.actualDeliveryTime && (
               <Row
                 label="Actual Delivery"
@@ -266,6 +272,20 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
                     )}
                   >
                     {formatDuration(order.deliveryTimeMinutes)}
+                  </span>
+                }
+              />
+            )}
+            <Row
+              label="Tracking Quality"
+              value={<DeliveryTrackingBadge status={order.deliveryTracking} />}
+            />
+            {order.trackingNotes && (
+              <Row
+                label="Tracking Notes"
+                value={
+                  <span className="text-amber-700 text-right leading-snug">
+                    {order.trackingNotes}
                   </span>
                 }
               />

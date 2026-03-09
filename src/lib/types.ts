@@ -1,5 +1,6 @@
 export type OrderStatus = "delivered" | "in_transit" | "canceled" | "pending";
 export type DisputeStatus = "approved" | "denied" | "pending" | "none";
+export type DeliveryTrackingStatus = "tracked" | "untracked" | "partially_tracked";
 export type OrderIssueType =
   | "missing_items"
   | "missing_food"
@@ -33,6 +34,7 @@ export interface Order {
   trackingStatus: OrderStatus;
   driver: Driver;
   orderDate: Date;
+  pickupTime: Date | null;
   estimatedDeliveryTime: Date;
   actualDeliveryTime: Date | null;
   disputeStatus: DisputeStatus;
@@ -42,6 +44,8 @@ export interface Order {
   customerRating: number | null;
   totalAmount: number;
   deliveryTimeMinutes: number | null;
+  deliveryTracking: DeliveryTrackingStatus;
+  trackingNotes: string | null;
   items: OrderItem[];
   issues: OrderIssue[];
 }
@@ -54,17 +58,18 @@ export interface AggregateMetrics {
   pendingDisputes: number;
   avgCompensationCost: number;
   avgDeliveryTimeMinutes: number;
-  orderCompletionRate: number;
+  trackingCoverage: number; // % of orders with "tracked" status
   ordersOverTime: { date: string; orders: number; disputes: number }[];
   issuesByType: { type: OrderIssueType; label: string; count: number; color: string }[];
   disputeBreakdown: { name: string; value: number; color: string }[];
+  trackingBreakdown: { name: string; value: number; color: string }[];
 }
 
 export interface FilterState {
   dateFrom: Date;
   dateTo: Date;
   storeNumber: string;
-  orderStatus: OrderStatus | "all";
+  deliveryTracking: DeliveryTrackingStatus | "all";
   disputeStatus: DisputeStatus | "all";
 }
 

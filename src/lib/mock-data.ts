@@ -1,5 +1,5 @@
 import { subDays, addMinutes, format } from "date-fns";
-import { Order, Driver, OrderItem, OrderIssue, OrderIssueType, OrderStatus, DisputeStatus } from "./types";
+import { Order, Driver, OrderItem, OrderIssue, OrderIssueType, OrderStatus, DisputeStatus, DeliveryTrackingStatus } from "./types";
 
 const STORES = [
   { number: "STR-001", name: "Downtown Kitchen" },
@@ -164,10 +164,43 @@ function generateOrders(): Order[] {
     // Actual delivery time (only for delivered)
     let actualDeliveryTime: Date | null = null;
     let deliveryTimeMinutes: number | null = null;
+    let pickupTime: Date | null = null;
+    let deliveryTracking: DeliveryTrackingStatus = "untracked";
+    let trackingNotes: string | null = null;
+
     if (trackingStatus === "delivered") {
       const variance = (rng() - 0.4) * 30; // -12 to +18 min variance
       deliveryTimeMinutes = Math.max(15, estDeliveryMins + variance);
       actualDeliveryTime = addMinutes(orderDate, deliveryTimeMinutes);
+
+      // Tracking quality distribution: 60% tracked, 25% partially tracked, 15% untracked
+      const trackRoll = rng();
+      if (trackRoll < 0.60) {
+        // Fully tracked: realistic pickup gap (10-25 min prep) + 12-30 min transit
+        const prepMins = Math.floor(rng() * 15) + 10;
+        pickupTime = addMinutes(orderDate, prepMins);
+        deliveryTracking = "tracked";
+      } else if (trackRoll < 0.85) {
+        // Partially tracked — two sub-cases
+        const partialRoll = rng();
+        if (partialRoll < 0.5) {
+          // Missing pickup timestamp entirely
+          pickupTime = null;
+          deliveryTracking = "partially_tracked";
+          trackingNotes = "Missing pickup timestamp — transit event not recorded by driver app";
+        } else {
+          // Pickup exists but timestamps too close together (< 5 min gap pickup → delivery)
+          const tooCloseMins = Math.floor(rng() * 4) + 1; // 1-4 min gap
+          pickupTime = addMinutes(actualDeliveryTime, -tooCloseMins);
+          deliveryTracking = "partially_tracked";
+          trackingNotes = `Timestamps too close: pickup and delivery ${tooCloseMins} min apart — possible scan error`;
+        }
+      } else {
+        // Fully untracked: no pickup, no intermediate events
+        pickupTime = null;
+        deliveryTracking = "untracked";
+        trackingNotes = "No tracking events recorded — driver app may have been offline";
+      }
     }
 
     // Dispute distribution: ~20% of orders, skewed to delivered/canceled
@@ -225,6 +258,7 @@ function generateOrders(): Order[] {
       trackingStatus,
       driver,
       orderDate,
+      pickupTime,
       estimatedDeliveryTime,
       actualDeliveryTime,
       disputeStatus,
@@ -234,6 +268,8 @@ function generateOrders(): Order[] {
       customerRating,
       totalAmount: Math.round(totalAmount * 100) / 100,
       deliveryTimeMinutes: deliveryTimeMinutes ? Math.round(deliveryTimeMinutes) : null,
+      deliveryTracking,
+      trackingNotes,
       items,
       issues,
     });

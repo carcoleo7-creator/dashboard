@@ -196,7 +196,7 @@ export default function DashboardPage() {
           <div className="p-6 max-w-[1600px]">
             {activeView === "dashboard" ? (
               <div className="space-y-6">
-                <DashboardHeader />
+                <DashboardHeader filteredOrders={filteredOrders} />
                 <FilterBar
                   filters={filters}
                   updateFilter={updateFilter}
