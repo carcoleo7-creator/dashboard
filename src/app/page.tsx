@@ -53,6 +53,7 @@ export default function DashboardPage() {
     selectedOrder,
     setSelectedOrder,
     drillIntoDisputeStatus,
+    drillIntoTrackingStatus,
   } = useDashboardFilters();
 
   const [activeKpiFilter, setActiveKpiFilter] = useState<string | null>(null);
@@ -77,6 +78,22 @@ export default function DashboardPage() {
   function handleDrillApproved() {
     drillIntoDisputeStatus("approved");
     setActiveKpiFilter("approved");
+    setTimeout(() => {
+      document.getElementById("orders-section")?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  }
+
+  function handleDrillPartiallyTracked() {
+    drillIntoTrackingStatus("partially_tracked");
+    setActiveKpiFilter("partially_tracked");
+    setTimeout(() => {
+      document.getElementById("orders-section")?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  }
+
+  function handleDrillUntracked() {
+    drillIntoTrackingStatus("untracked");
+    setActiveKpiFilter("untracked");
     setTimeout(() => {
       document.getElementById("orders-section")?.scrollIntoView({ behavior: "smooth" });
     }, 100);
@@ -213,6 +230,8 @@ export default function DashboardPage() {
                   onDrillAllOrders={handleDrillAllOrders}
                   onDrillDisputes={handleDrillDisputes}
                   onDrillApproved={handleDrillApproved}
+                  onDrillPartiallyTracked={handleDrillPartiallyTracked}
+                  onDrillUntracked={handleDrillUntracked}
                 />
                 <ChartsSection metrics={metrics} />
                 <div id="orders-section">

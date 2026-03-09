@@ -5,6 +5,8 @@ import {
   AlertTriangle,
   CheckCircle,
   DollarSign,
+  ScanLine,
+  ScanSearch,
 } from "lucide-react";
 import { KPICard } from "./KPICard";
 import { AggregateMetrics } from "@/lib/types";
@@ -16,6 +18,8 @@ interface KPIRowProps {
   onDrillDisputes: () => void;
   onDrillApproved: () => void;
   onDrillAllOrders: () => void;
+  onDrillPartiallyTracked: () => void;
+  onDrillUntracked: () => void;
 }
 
 export function KPIRow({
@@ -24,6 +28,8 @@ export function KPIRow({
   onDrillDisputes,
   onDrillApproved,
   onDrillAllOrders,
+  onDrillPartiallyTracked,
+  onDrillUntracked,
 }: KPIRowProps) {
   const disputeRate =
     metrics.totalOrders > 0
@@ -36,16 +42,44 @@ export function KPIRow({
       : "0%";
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       <KPICard
         label="Total Orders"
         value={metrics.totalOrders.toLocaleString()}
-        subValue="in selected period"
+        subValue="completed & delivered"
         icon={<ShoppingCart className="w-5 h-5 text-brand-600" />}
         iconBg="bg-brand-50"
         onClick={onDrillAllOrders}
         isActive={activeFilter === "all"}
         tooltip="Click to view all orders"
+      />
+      <KPICard
+        label="Partially Tracked"
+        value={metrics.partiallyTrackedCount.toLocaleString()}
+        subValue={
+          metrics.totalOrders > 0
+            ? `${formatPercent((metrics.partiallyTrackedCount / metrics.totalOrders) * 100)} of orders`
+            : "0% of orders"
+        }
+        icon={<ScanSearch className="w-5 h-5 text-amber-600" />}
+        iconBg="bg-amber-50"
+        onClick={onDrillPartiallyTracked}
+        isActive={activeFilter === "partially_tracked"}
+        tooltip="Click to filter partially tracked orders"
+      />
+      <KPICard
+        label="Untracked"
+        value={metrics.untrackedCount.toLocaleString()}
+        subValue={
+          metrics.totalOrders > 0
+            ? `${formatPercent((metrics.untrackedCount / metrics.totalOrders) * 100)} of orders`
+            : "0% of orders"
+        }
+        icon={<ScanLine className="w-5 h-5 text-red-500" />}
+        iconBg="bg-red-50"
+        onClick={onDrillUntracked}
+        isActive={activeFilter === "untracked"}
+        tooltip="Click to filter untracked orders"
       />
       <KPICard
         label="Total Disputes"

@@ -58,6 +58,9 @@ export interface AggregateMetrics {
   pendingDisputes: number;
   avgCompensationCost: number;
   avgDeliveryTimeMinutes: number;
+  trackedCount: number;
+  partiallyTrackedCount: number;
+  untrackedCount: number;
   trackingCoverage: number; // % of orders with "tracked" status
   ordersOverTime: { date: string; orders: number; disputes: number }[];
   issuesByType: { type: OrderIssueType; label: string; count: number; color: string }[];
